@@ -3,7 +3,10 @@
 namespace  Jliu\ThinkphpWechat;
 
 use EasyWeChat\Foundation\Application;
+use think\cache\driver\Redis;
 use think\Config;
+use Doctrine\Common\Cache\RedisCache;
+use think\Env;
 
 /**
  * Class Wechat  微信类
@@ -45,6 +48,15 @@ class Wechat
     {
         if (!isset(self::$app)) {
             $options = Config::get('wechat');
+
+            $cacheDriver = new RedisCache();
+            // 创建 redis 实例
+            $redis = new \Redis();
+            $redis->connect(Env::get('redis.host', '127.0.0.1'), Env::get('redis.port', '6379'));
+            $redis->auth(Env::get('redis.auth', ''));
+
+            $cacheDriver->setRedis($redis);
+            $options['cache'] = $cacheDriver;
             self::$app = new Application($options);
         }
         return self::$app;
